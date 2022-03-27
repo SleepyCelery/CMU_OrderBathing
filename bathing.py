@@ -79,9 +79,14 @@ class BathingItem:
             'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 15_3_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 wxwork/4.0.1 MicroMessenger/7.0.1 Language/zh ColorScheme/Dark',
             'Referer': 'http://intelligence.cmu.edu.cn/Bathing/WaitUse',
         }
-
-        response = requests.post('http://intelligence.cmu.edu.cn/Bathing/GetWaitUseData', headers=headers,
-                                 cookies=self.cookie)
+        while True:
+            try:
+                response = requests.post('http://intelligence.cmu.edu.cn/Bathing/GetWaitUseData', headers=headers,
+                                         cookies=self.cookie, timeout=15)
+                if response:
+                    break
+            except:
+                continue
         try:
             data = response.json()
             if data['state'] == 'start':
