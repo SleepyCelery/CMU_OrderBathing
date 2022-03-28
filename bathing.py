@@ -58,7 +58,7 @@ class BathingItem:
         }
 
         response = requests.post('http://intelligence.cmu.edu.cn/Bathing/OrderBathing', headers=headers,
-                                 cookies=self.cookie, data=data)
+                                 cookies=self.cookie, data=data, timeout=15)
         if response.json()['info'] == 'canuse':
             self.ordered = True
             return True
@@ -79,19 +79,15 @@ class BathingItem:
             'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 15_3_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 wxwork/4.0.1 MicroMessenger/7.0.1 Language/zh ColorScheme/Dark',
             'Referer': 'http://intelligence.cmu.edu.cn/Bathing/WaitUse',
         }
-        while True:
-            try:
-                response = requests.post('http://intelligence.cmu.edu.cn/Bathing/GetWaitUseData', headers=headers,
-                                         cookies=self.cookie, timeout=15)
-                if response:
-                    break
-            except:
-                continue
+
+        response = requests.post('http://intelligence.cmu.edu.cn/Bathing/GetWaitUseData', headers=headers,
+                                 cookies=self.cookie, timeout=15)
         try:
             data = response.json()
             if data['state'] == 'start':
                 self.orderarea = int(re.findall(r'.*?号楼.*?层(.*?)号位', data['data']['orderArea'])[0])
                 self.orderexpiretime = int(data['data']['effectiveTime'][6:-2])
+                self.if_opentab = False
                 return self.orderarea
             elif data['state'] == 'wait':
                 self.orderarea = int(re.findall(r'.*?号楼.*?层(.*?)号位', data['data']['orderArea'])[0])
@@ -146,10 +142,10 @@ def watch_bathing(building, floor, cookie, want_pos):
         # 如果当前处于未预约状态
         if not status:
             # 预约到目标位置为止
-            print('正在预约目标位置...')
+            print('正在预约{}楼{}层{}号位...'.format(building, floor, "、".join([str(i) for i in want_pos])))
             while True:
                 b.order_bathing()
-                time.sleep(1)
+                time.sleep(2)
                 pos = b.check_waituse_data()
                 if pos not in want_pos:
                     time.sleep(1)
@@ -158,7 +154,8 @@ def watch_bathing(building, floor, cookie, want_pos):
                     break
         # 如果已经预约但没有开阀,持续监视
         elif status and not b.if_opentab:
-            time.sleep(3)
+            print("{}楼{}层{}号位已预约上！".format(building, floor, b.orderarea))
+            time.sleep(5)
             continue
         # 如果已经预约且开阀了，结束该线程
         elif status and b.if_opentab:
