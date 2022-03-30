@@ -6,6 +6,7 @@ from typing import List
 import time
 import uvicorn
 import user_manager
+from loguru import logger
 
 app = FastAPI()
 
@@ -51,5 +52,15 @@ def watchbathing(item: Item):
     return '帮您看住了{}号楼{}层的{}号位，直到您开始洗澡为止'.format(item.building, item.floor, "、".join([str(i) for i in item.want_pos]))
 
 
+def clear_users_thread():
+    logger.success("Users clearing thread start successfully!")
+    while True:
+        if int(time.strftime('%H%M%S')) <= 5:
+            user_manager.clear_users()
+        time.sleep(3)
+
+
 if __name__ == '__main__':
+    logger.add('logs/main_{time}.log', rotation="100 MB")
+    threading.Thread(target=clear_users_thread).start()  # start a thread to clear users in yesterday
     uvicorn.run(app=app, host='0.0.0.0', port=7767)

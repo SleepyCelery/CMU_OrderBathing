@@ -3,6 +3,7 @@ from typing import Union
 import time
 import re
 import user_manager
+from loguru import logger
 
 building_table = {
     '1': '0001',
@@ -137,28 +138,32 @@ class BathingItem:
 def watch_bathing(building, floor, cookie, want_pos):
     b = BathingItem(building, floor, cookie)
     while True:
-        # 进入循环首先检查当前状态
-        status = b.check_waituse_data()
-        # 如果当前处于未预约状态
-        if not status:
-            # 预约到目标位置为止
-            print('正在预约{}楼{}层{}号位...'.format(building, floor, "、".join([str(i) for i in want_pos])))
-            while True:
-                b.order_bathing()
-                time.sleep(2)
-                pos = b.check_waituse_data()
-                if pos not in want_pos:
-                    time.sleep(1)
-                    b.cancel_order()
-                else:
-                    break
-        # 如果已经预约但没有开阀,持续监视
-        elif status and not b.if_opentab:
-            print("{}楼{}层{}号位已预约上！".format(building, floor, b.orderarea))
-            time.sleep(5)
+        try:
+            # 进入循环首先检查当前状态
+            status = b.check_waituse_data()
+            # 如果当前处于未预约状态
+            if not status:
+                # 预约到目标位置为止
+                print('正在预约{}楼{}层{}号位...'.format(building, floor, "、".join([str(i) for i in want_pos])))
+                while True:
+                    b.order_bathing()
+                    time.sleep(2)
+                    pos = b.check_waituse_data()
+                    if pos not in want_pos:
+                        time.sleep(1)
+                        b.cancel_order()
+                    else:
+                        break
+            # 如果已经预约但没有开阀,持续监视
+            elif status and not b.if_opentab:
+                print("{}楼{}层{}号位已预约上！".format(building, floor, b.orderarea))
+                time.sleep(5)
+                continue
+            # 如果已经预约且开阀了，结束该线程
+            elif status and b.if_opentab:
+                print('阀门已经开启，监视结束')
+                user_manager.del_user(cookie)
+                break
+        except Exception as e:
+            logger.error(e)
             continue
-        # 如果已经预约且开阀了，结束该线程
-        elif status and b.if_opentab:
-            print('阀门已经开启，监视结束')
-            user_manager.del_user(cookie)
-            break
