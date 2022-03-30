@@ -18,9 +18,11 @@
 
 ### 客户端
 
-由于构建请求需要学校洗浴系统的cookie，故需要先使用抓包软件进行抓包。iOS端可以使用Stream APP，如果使用PC可以通过代理将手机流量代理到Fiddler或Charles上进行抓包。
+由于构建请求需要学校洗浴系统的cookie，故需要先使用抓包软件进行抓包。iOS端可以使用Stream APP，安卓端可以使用Packet Capture，如果使用PC可以通过代理将手机流量代理到Fiddler或Charles上进行抓包。
 
 FastAPI自带Swagger文档，在服务运行之后可以使用http://{服务器IP}:7767/docs访问文档
+
+可查看client_demo.py作为客户端开发参考
 
 ## 注意事项
 
