@@ -164,6 +164,9 @@ def watch_bathing(building, floor, cookie, want_pos):
                 print('阀门已经开启，监视结束')
                 user_manager.del_user(cookie)
                 break
+            # 每天凌晨自动结束预约线程，避免遗留到第二天
+            elif int(time.strftime('%H%M%S')) <= 5:
+                break
         except Exception as e:
             logger.error(e)
             continue
